@@ -6,9 +6,9 @@ class Obstacle():
         self.velocity = velocity
         self.size = size
         self.color = color
+        self.passed = False
 
         self.rect = pygame.Rect(position, size)
-
 
     def draw(self, surf):
         pygame.draw.rect(surf, self.color, self.rect)

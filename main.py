@@ -66,8 +66,9 @@ class Game:
 
     def update_score(self):
         for obstacle in self.top_obstacles:
-            if self.player.rect.centerx == obstacle.rect.centerx:
+            if self.player.rect.centerx >= obstacle.rect.centerx and not obstacle.passed:
                 self.score += 1
+                obstacle.passed = True
 
     def display_score(self):
         display_text(
