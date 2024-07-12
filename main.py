@@ -33,7 +33,8 @@ class Game:
             )
 
         # setup obstacles
-        self.obstacles = []
+        self.top_obstacles = []
+        self.bottom_obstacles = []
 
         # setup timer
         self.spawn_obstacle = pygame.USEREVENT + 1
@@ -54,26 +55,26 @@ class Game:
                 color = (0, 0, 0)
             )
 
-    def update_obstacles(self):
-        return [obstacle for obstacle in self.obstacles if obstacle.rect.right > 0]
+    def remove_obstacles(self):
+        self.top_obstacles = [top_obstacle for top_obstacle in self.top_obstacles if top_obstacle.rect.right > 0]
+        self.bottom_obstacles = [bottom_obstacle for bottom_obstacle in self.bottom_obstacles if bottom_obstacle.rect.right > 0]
 
     def is_player_colliding(self):
         is_out_of_bounds = self.player.rect.top < 0 or self.player.rect.bottom > self.screen.get_height()
-        is_colliding_with_obstacle = self.player.rect.collidelist(self.obstacles) > -1
+        is_colliding_with_obstacle = self.player.rect.collidelist(self.top_obstacles) > -1 or self.player.rect.collidelist(self.bottom_obstacles) > -1
         return is_out_of_bounds or is_colliding_with_obstacle
 
     def update_score(self):
-        for obstacle in self.obstacles:
+        for obstacle in self.top_obstacles:
             if self.player.rect.centerx == obstacle.rect.centerx:
-                self.score += 0.5
-        self.score = int(self.score)
+                self.score += 1
 
     def display_score(self):
         display_text(
             surf = self.screen,
             text = f'{self.score}',
-            position = (self.screen.get_width() / 2, self.screen.get_height() / 2),
             size = 600,
+            position = (self.screen.get_width() / 2, self.screen.get_height() / 2),
             color = (230, 230, 230)
         )
 
@@ -81,8 +82,8 @@ class Game:
         display_text(
             surf = self.screen,
             text = 'FLAPPY BIRD',
-            position = (self.screen.get_width() / 2, self.screen.get_height() / 2),
             size = 250,
+            position = (self.screen.get_width() / 2, self.screen.get_height() / 2),
             color = (0, 0, 0),
         )
 
@@ -90,8 +91,8 @@ class Game:
         display_text(
             surf = self.screen,
             text = 'Click or press space to play',
-            position = (self.screen.get_width() / 2, self.screen.get_height() / 2 + 200), 
             size = 40,
+            position = (self.screen.get_width() / 2, self.screen.get_height() / 2 + 200), 
             color = (200, 200, 200),
             )
 
@@ -99,17 +100,17 @@ class Game:
         display_text(
             surf = self.screen,
             text = 'GAME OVER',
-            position = (self.screen.get_width() / 2, self.screen.get_height() / 2),
             size = 200,
+            position = (self.screen.get_width() / 2, self.screen.get_height() / 2),
             color = (0, 0, 0)
         )
 
     def display_game_over_score_text(self):
         display_text(
             surf = self.screen,
-            text = f'Score {self.score}',
-            position = (self.screen.get_width() / 2, self.screen.get_height() / 2 + 100),
+            text = f'Score: {self.score}',
             size = 60,
+            position = (self.screen.get_width() / 2, self.screen.get_height() / 2 + 110),
             color = (0, 0, 0)
         )
 
@@ -117,8 +118,8 @@ class Game:
         display_text(
             surf = self.screen,
             text = 'Click or press space to play again',
-            position = (self.screen.get_width() / 2, self.screen.get_height() / 2 + 200),
             size = 40,
+            position = (self.screen.get_width() / 2, self.screen.get_height() / 2 + 200),
             color = (200, 200, 200)
         )
 
@@ -148,13 +149,13 @@ class Game:
                 if self.is_game_active:
                     # handle obstacle spawning
                     if event.type == self.spawn_obstacle:
-                        gap = 170
+                        gap = 160
                         center_y = random.uniform(self.screen.get_height() / 2 - 250, self.screen.get_height() / 2 + 250)
                         top_obstacle = self.create_obstacle(center_y - gap / 2 - 1000)
                         bottom_obstacle = self.create_obstacle(center_y + gap / 2)
 
-                        self.obstacles.append(top_obstacle)
-                        self.obstacles.append(bottom_obstacle)
+                        self.top_obstacles.append(top_obstacle)
+                        self.bottom_obstacles.append(bottom_obstacle)
                 else:
                     # handle starting game
                     is_space_pressed = event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE
@@ -174,9 +175,10 @@ class Game:
                 self.player.update(self.screen)
 
                 # update obstacles
-                for obstacle in self.obstacles:
-                    obstacle.update(self.screen)
-                self.obstacles = self.update_obstacles()
+                for top_obstacle, bottom_obstacle in zip(self.top_obstacles, self.bottom_obstacles):
+                    top_obstacle.update(self.screen)
+                    bottom_obstacle.update(self.screen)
+                self.remove_obstacles()
                 
                 # check if player is colliding
                 self.is_game_active = not self.is_player_colliding()
