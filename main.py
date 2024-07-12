@@ -1,4 +1,5 @@
 import sys
+import time
 import random
 
 import pygame
@@ -18,6 +19,7 @@ class Game:
         self.screen = pygame.display.set_mode(self.screen_size, pygame.RESIZABLE)
         self.clock = pygame.time.Clock()
         self.max_fps = 60
+        self.last_time = time.perf_counter()
         self.screen_bg_color = (255, 255 ,255)
         self.is_game_played = False
         self.is_game_active = False
@@ -25,6 +27,7 @@ class Game:
     def game_setup(self):
         # setup player
         self.player = Player(
+                game = self,
                 position = pygame.math.Vector2(self.screen.get_width() * 0.3, self.screen.get_height() * 0.5),
                 velocity = pygame.math.Vector2(0, 0),
                 acceleration = pygame.math.Vector2(0, 0.55),
@@ -49,6 +52,7 @@ class Game:
 
     def create_obstacle(self, position_y):
         return Obstacle(
+                game = self,
                 position = pygame.math.Vector2(self.screen.get_width(), position_y),
                 velocity = pygame.math.Vector2(-3, 0),
                 size = (80, 1000),
@@ -127,25 +131,17 @@ class Game:
     def run(self):
         # game loop
         while True:
+            # update delta time
+            self.delta_time = time.perf_counter() - self.last_time
+            self.delta_time *= 60
+            self.last_time = time.perf_counter()
+
             # event loop
             for event in pygame.event.get():
                 # handle closing window
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
-                
-                # handle resizing
-                if event.type == pygame.VIDEORESIZE:
-                    if not self.is_fullscreen:
-                        self.screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
-                
-                # toggle fullscreen
-                if event.type == pygame.KEYDOWN and event.key == pygame.K_f:
-                    self.is_fullscreen = not self.is_fullscreen
-                    if self.is_fullscreen:
-                        self.screen = pygame.display.set_mode(self.monitor_size, pygame.FULLSCREEN)
-                    else:
-                        self.screen = pygame.display.set_mode((self.screen.get_width(), self.screen.get_height()), pygame.RESIZABLE)
                 
                 if self.is_game_active:
                     # handle obstacle spawning
@@ -158,6 +154,27 @@ class Game:
                         self.top_obstacles.append(top_obstacle)
                         self.bottom_obstacles.append(bottom_obstacle)
                 else:
+                    # handle resizing
+                    if event.type == pygame.VIDEORESIZE:
+                        if not self.is_fullscreen:
+                            self.screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
+                    
+                    # toggle fullscreen
+                    if event.type == pygame.KEYDOWN and event.key == pygame.K_f:
+                        self.is_fullscreen = not self.is_fullscreen
+                        if self.is_fullscreen:
+                            self.screen = pygame.display.set_mode(self.monitor_size, pygame.FULLSCREEN)
+                        else:
+                            self.screen = pygame.display.set_mode((self.screen.get_width(), self.screen.get_height()), pygame.RESIZABLE)
+
+                    # handle resetting display size
+                    if event.type == pygame.KEYDOWN and event.key == pygame.K_r:
+                        self.screen = pygame.display.set_mode(self.screen_size, pygame.RESIZABLE)
+
+                    # * DEBUG: handle changing framerate
+                    if event.type == pygame.KEYDOWN and event.key == pygame.K_e:
+                        self.max_fps = 20
+
                     # handle starting game
                     is_space_pressed = event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE
                     is_mouse_clicked = event.type == pygame.MOUSEBUTTONDOWN

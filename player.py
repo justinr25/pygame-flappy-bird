@@ -1,7 +1,8 @@
 import pygame
 
 class Player():
-    def __init__(self, position, velocity, acceleration, size, color):
+    def __init__(self, game, position, velocity, acceleration, size, color):
+        self.game = game
         self.position = position
         self.velocity = velocity
         self.acceleration = acceleration
@@ -31,8 +32,8 @@ class Player():
             self.isJumpButtonReleased = True
 
         # update kinematics values
-        self.velocity += self.acceleration
-        self.rect.move_ip(self.velocity)
+        self.velocity += self.acceleration * self.game.delta_time
+        self.rect.move_ip(self.velocity * self.game.delta_time)
         # self.position += self.velocity
         # self.rect.center = self.position
         

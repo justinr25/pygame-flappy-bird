@@ -1,7 +1,8 @@
 import pygame
 
 class Obstacle():
-    def __init__(self, position, velocity, size, color):
+    def __init__(self, game, position, velocity, size, color):
+        self.game = game
         self.position = position
         self.velocity = velocity
         self.size = size
@@ -18,6 +19,6 @@ class Obstacle():
         self.draw(surf)
 
         # update kinematics values
-        self.rect.move_ip(self.velocity)
+        self.rect.move_ip(self.velocity * self.game.delta_time)
         # self.position += self.velocity
         # self.rect.bottomleft = self.position
