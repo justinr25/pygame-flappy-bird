@@ -12,13 +12,13 @@ class Game:
     def __init__(self):
         # setup pygame
         pygame.init()
-        pygame.display.set_caption('Title')
+        pygame.display.set_caption('Flappy Bird')
         self.monitor_size = [pygame.display.Info().current_w, pygame.display.Info().current_h]
         self.is_fullscreen = False
         self.screen_size = (1280, 720)
+        self.max_fps = 60
         self.screen = pygame.display.set_mode(self.screen_size, pygame.RESIZABLE)
         self.clock = pygame.time.Clock()
-        self.max_fps = 60
         self.last_time = time.perf_counter()
         self.screen_bg_color = (255, 255 ,255)
         self.is_game_played = False
@@ -49,6 +49,13 @@ class Game:
 
         # reset score
         self.score = 0
+
+        # disable display resizing
+        self.screen = pygame.display.set_mode(self.screen_size)
+
+    def handle_game_over(self):
+        # enable display resizing
+        self.screen = pygame.display.set_mode(self.screen_size, pygame.RESIZABLE)
 
     def create_obstacle(self, position_y):
         return Obstacle(
@@ -200,6 +207,8 @@ class Game:
                 
                 # check if player is colliding
                 self.is_game_active = not self.is_player_colliding()
+                if not self.is_game_active:
+                    self.handle_game_over()
             else:
                 if not self.is_game_played:
                     self.display_title_text()
