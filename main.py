@@ -1,6 +1,7 @@
 import sys
 import time
 import random
+import json
 
 import pygame
 
@@ -23,6 +24,9 @@ class Game:
         self.screen_bg_color = (255, 255 ,255)
         self.is_game_played = False
         self.is_game_active = False
+        self.high_score = {}
+        with open('high_score.json', 'r') as high_score_file:
+            self.high_score = json.load(high_score_file)
 
     def game_setup(self):
         # setup player
@@ -53,9 +57,18 @@ class Game:
         # disable display resizing
         self.screen = pygame.display.set_mode(self.screen_size)
 
+    def save_high_score(self):
+        if self.score > self.high_score['high_score']:
+            self.high_score['high_score'] = self.score
+        with open('high_score.json', 'w') as high_score_file:
+            json.dump(self.high_score, high_score_file)
+
     def handle_game_over(self):
         # enable display resizing
         self.screen = pygame.display.set_mode(self.screen_size, pygame.RESIZABLE)
+
+        # save high score to json file
+        self.save_high_score()
 
     def create_obstacle(self, position_y):
         return Obstacle(
@@ -122,7 +135,16 @@ class Game:
             surf = self.screen,
             text = f'Score: {self.score}',
             size = 60,
-            position = (self.screen.get_width() / 2, self.screen.get_height() / 2 + 110),
+            position = (self.screen.get_width() / 2, self.screen.get_height() / 2 + 120),
+            color = (0, 0, 0)
+        )
+
+    def display_game_over_high_score_text(self):
+        display_text(
+            surf = self.screen,
+            text = f'High Score: {self.high_score["high_score"]}',
+            size = 60,
+            position = (self.screen.get_width() / 2, self.screen.get_height() / 2 + 180),
             color = (0, 0, 0)
         )
 
@@ -131,7 +153,7 @@ class Game:
             surf = self.screen,
             text = 'Click or press space to play again',
             size = 40,
-            position = (self.screen.get_width() / 2, self.screen.get_height() / 2 + 200),
+            position = (self.screen.get_width() / 2, self.screen.get_height() - 70),
             color = (200, 200, 200)
         )
 
@@ -166,7 +188,7 @@ class Game:
                         if not self.is_fullscreen:
                             self.screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
                     
-                    # toggle fullscreen
+                    # toggle fullscreen with f
                     if event.type == pygame.KEYDOWN and event.key == pygame.K_f:
                         self.is_fullscreen = not self.is_fullscreen
                         if self.is_fullscreen:
@@ -174,13 +196,16 @@ class Game:
                         else:
                             self.screen = pygame.display.set_mode((self.screen.get_width(), self.screen.get_height()), pygame.RESIZABLE)
 
-                    # handle resetting display size
+                    # handle resetting display size with r
                     if event.type == pygame.KEYDOWN and event.key == pygame.K_r:
                         self.screen = pygame.display.set_mode(self.screen_size, pygame.RESIZABLE)
 
-                    # * DEBUG: handle changing framerate
+                    # * DEBUG: toggle framerate with e
                     if event.type == pygame.KEYDOWN and event.key == pygame.K_e:
-                        self.max_fps = 20
+                        if self.max_fps == 60:
+                            self.max_fps = 20
+                        else:
+                            self.max_fps = 60
 
                     # handle starting game
                     is_space_pressed = event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE
@@ -218,6 +243,7 @@ class Game:
 
                     self.display_game_over_text()
                     self.display_game_over_score_text()
+                    self.display_game_over_high_score_text()
                     self.display_play_again_text()
                     
 
