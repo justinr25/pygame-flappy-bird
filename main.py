@@ -8,6 +8,7 @@ import pygame
 from utils import display_text
 from player import Player
 from obstacle import Obstacle
+from reset_button import ResetButton
 
 class Game:
     def __init__(self):
@@ -16,17 +17,24 @@ class Game:
         pygame.display.set_caption('Flappy Bird')
         self.monitor_size = [pygame.display.Info().current_w, pygame.display.Info().current_h]
         self.is_fullscreen = False
-        self.screen_size = (1280, 720)
+        self.screen_size = 1280, 720
         self.max_fps = 60
         self.screen = pygame.display.set_mode(self.screen_size, pygame.RESIZABLE)
         self.clock = pygame.time.Clock()
         self.last_time = time.perf_counter()
-        self.screen_bg_color = (255, 255 ,255)
+        self.screen_bg_color = 255, 255 ,255
         self.is_game_played = False
         self.is_game_active = False
-        self.high_score = {}
+        self.high_score = {'high_score': 0}
         with open('high_score.json', 'r') as high_score_file:
             self.high_score = json.load(high_score_file)
+        self.reset_high_score_btn = ResetButton(
+            game = self,
+            text = 'Reset High Score',
+            size = 30,
+            position = (100, self.screen.get_height() - 30),
+            text_color = (0, 0, 0)
+        )
 
     def game_setup(self):
         # setup player
@@ -157,6 +165,9 @@ class Game:
             color = (200, 200, 200)
         )
 
+    def display_reset_high_score_btn(self):
+       self.reset_high_score_btn.update()
+
     def run(self):
         # game loop
         while True:
@@ -210,7 +221,7 @@ class Game:
                     # handle starting game
                     is_space_pressed = event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE
                     is_mouse_clicked = event.type == pygame.MOUSEBUTTONDOWN
-                    if  is_space_pressed or is_mouse_clicked:
+                    if not self.reset_high_score_btn.is_clicked() and (is_space_pressed or is_mouse_clicked):
                         self.game_setup()
 
             # clear screen
@@ -245,7 +256,7 @@ class Game:
                     self.display_game_over_score_text()
                     self.display_game_over_high_score_text()
                     self.display_play_again_text()
-                    
+                    self.display_reset_high_score_btn()
 
             pygame.display.update()
             self.clock.tick(self.max_fps)
