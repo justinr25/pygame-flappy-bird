@@ -25,9 +25,10 @@ class Game:
         self.screen_bg_color = 255, 255 ,255
         self.is_game_played = False
         self.is_game_active = False
-        self.high_score = {'high_score': 0}
+        self.high_score = 0
         with open('high_score.json', 'r') as high_score_file:
-            self.high_score = json.load(high_score_file)
+            high_score_obj = json.load(high_score_file)
+            self.high_score = high_score_obj['high_score']
         self.reset_high_score_btn = ResetButton(
             game = self,
             text = 'Reset High Score',
@@ -66,10 +67,14 @@ class Game:
         self.screen = pygame.display.set_mode(self.screen_size)
 
     def save_high_score(self):
-        if self.score > self.high_score['high_score']:
-            self.high_score['high_score'] = self.score
+        # update high score
+        if self.score > self.high_score:
+            self.high_score = self.score
+
+        # save high score to json file
+        high_score_obj = {'high_score': self.high_score}
         with open('high_score.json', 'w') as high_score_file:
-            json.dump(self.high_score, high_score_file)
+            json.dump(high_score_obj, high_score_file)
 
     def handle_game_over(self):
         # enable display resizing
@@ -150,7 +155,7 @@ class Game:
     def display_game_over_high_score_text(self):
         display_text(
             surf = self.screen,
-            text = f'High Score: {self.high_score["high_score"]}',
+            text = f'High Score: {self.high_score}',
             size = 60,
             position = (self.screen.get_width() / 2, self.screen.get_height() / 2 + 180),
             color = (0, 0, 0)

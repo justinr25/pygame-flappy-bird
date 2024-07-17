@@ -9,6 +9,9 @@ class ResetButton(Button):
         super().__init__(game, text, size, position, text_color, bg_color, font)
     
     def click_event(self):
+        # save high score of 0 to json file
         with open('high_score.json', 'w') as high_score_file:
             json.dump({'high_score': 0}, high_score_file)
-        self.game.high_score = {'high_score': 0}
+
+        # reset high score for player
+        self.game.high_score = 0
