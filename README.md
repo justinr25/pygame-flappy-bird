@@ -1,4 +1,4 @@
-# Flappy Bird
+# Pygame Flappy Bird
 A Python implementation of Flappy Bird using Pygame.
 
 ## Demo
