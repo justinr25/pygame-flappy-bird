@@ -25,15 +25,17 @@ class Player():
 
         # handle jumping
         keys = pygame.key.get_pressed()
-        if self.isJumpButtonReleased and (keys[pygame.K_SPACE] or pygame.mouse.get_pressed()[0]):
+        is_space_pressed = keys[pygame.K_SPACE]
+        is_mouse_pressed = pygame.mouse.get_pressed()[0]
+        if self.isJumpButtonReleased and (is_space_pressed or is_mouse_pressed):
             self.jump()
             self.isJumpButtonReleased = False
-        if not keys[pygame.K_SPACE] and not pygame.mouse.get_pressed()[0]:
+        if not is_space_pressed and not is_mouse_pressed:
             self.isJumpButtonReleased = True
 
         # update kinematics values
+        # self.rect.move_ip(self.velocity * self.game.delta_time)
         self.velocity += self.acceleration * self.game.delta_time
-        self.rect.move_ip(self.velocity * self.game.delta_time)
-        # self.position += self.velocity
-        # self.rect.center = self.position
+        self.position += self.velocity
+        self.rect.center = self.position
         
