@@ -22,7 +22,7 @@ class Game:
         self.screen = pygame.display.set_mode(self.screen_size, pygame.RESIZABLE)
         self.clock = pygame.time.Clock()
         self.last_time = time.perf_counter()
-        self.screen_bg_color = 255, 255 ,255
+        self.screen_bg_color = (255, 255, 255)
         self.is_game_played = False
         self.is_game_active = False
         self.high_score = 0
@@ -40,21 +40,21 @@ class Game:
     def game_setup(self):
         # setup player
         self.player = Player(
-                game = self,
-                position = pygame.math.Vector2(self.screen.get_width() * 0.3, self.screen.get_height() * 0.5),
-                velocity = pygame.math.Vector2(0, 0),
-                acceleration = pygame.math.Vector2(0, 0.55),
-                size = (50, 50),
-                color = (0, 0, 0)
-            )
+            game = self,
+            position = pygame.math.Vector2(self.screen.get_width() * 0.3, self.screen.get_height() * 0.5),
+            velocity = pygame.math.Vector2(0, 0),
+            acceleration = pygame.math.Vector2(0, 0.55),
+            size = (50, 50),
+            color = (0, 0, 0)
+        )
 
         # setup obstacles
         self.top_obstacles = []
         self.bottom_obstacles = []
 
-        # setup timer
-        self.spawn_obstacle = pygame.USEREVENT + 1
-        pygame.time.set_timer(self.spawn_obstacle, 2000)
+        # setup timer to spawn obtacles every 2 seconds
+        self.spawn_obstacles_event = pygame.USEREVENT + 1
+        pygame.time.set_timer(self.spawn_obstacles_event, 2000)
         
         # reset game state
         self.is_game_active = True
@@ -65,6 +65,9 @@ class Game:
 
         # disable display resizing
         self.screen = pygame.display.set_mode(self.screen_size)
+
+        # add flag to ignore mouse input when starting game
+        self.ignore_mouse_press = True
 
     def save_high_score(self):
         # update high score
@@ -83,14 +86,25 @@ class Game:
         # save high score to json file
         self.save_high_score()
 
-    def create_obstacle(self, position_y):
+    def create_obstacle(self, position_y, is_bottom):
         return Obstacle(
-                game = self,
-                position = pygame.math.Vector2(self.screen.get_width(), position_y),
-                velocity = pygame.math.Vector2(-3, 0),
-                size = (80, 1000),
-                color = (0, 0, 0)
-            )
+            game = self,
+            position = pygame.math.Vector2(self.screen.get_width(), position_y),
+            velocity = pygame.math.Vector2(-3, 0),
+            size = (80, 1000),
+            color = (0, 0, 0),
+            is_bottom = is_bottom
+        )
+    
+    
+    def spawn_obstacle_pair(self):
+        gap = 160
+        center_y = random.uniform(self.screen.get_height() / 2 - 250, self.screen.get_height() / 2 + 250)
+        top_obstacle = self.create_obstacle(center_y - gap / 2, False)
+        bottom_obstacle = self.create_obstacle(center_y + gap / 2, True)
+
+        self.top_obstacles.append(top_obstacle)
+        self.bottom_obstacles.append(bottom_obstacle)
 
     def remove_obstacles(self):
         self.top_obstacles = [top_obstacle for top_obstacle in self.top_obstacles if top_obstacle.rect.right > 0]
@@ -103,9 +117,9 @@ class Game:
 
     def update_score(self):
         for obstacle in self.top_obstacles:
-            if self.player.rect.centerx >= obstacle.rect.centerx and not obstacle.passed:
+            if self.player.rect.centerx >= obstacle.rect.centerx and not obstacle.is_passed:
                 self.score += 1
-                obstacle.passed = True
+                obstacle.is_passed = True
 
     def display_score(self):
         display_text(
@@ -132,7 +146,7 @@ class Game:
             size = 40,
             position = (self.screen.get_width() / 2, self.screen.get_height() / 2 + 200), 
             color = (200, 200, 200),
-            )
+        )
 
     def display_game_over_text(self):
         display_text(
@@ -190,21 +204,15 @@ class Game:
                 
                 if self.is_game_active:
                     # handle obstacle spawning
-                    if event.type == self.spawn_obstacle:
-                        gap = 160
-                        center_y = random.uniform(self.screen.get_height() / 2 - 250, self.screen.get_height() / 2 + 250)
-                        top_obstacle = self.create_obstacle(center_y - gap / 2 - 1000)
-                        bottom_obstacle = self.create_obstacle(center_y + gap / 2)
-
-                        self.top_obstacles.append(top_obstacle)
-                        self.bottom_obstacles.append(bottom_obstacle)
+                    if event.type == self.spawn_obstacles_event:
+                        self.spawn_obstacle_pair()
                 else:
                     # handle resizing
                     if event.type == pygame.VIDEORESIZE:
                         if not self.is_fullscreen:
                             self.screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
                     
-                    # toggle fullscreen with f
+                    # handle toggling fullscreen with f
                     if event.type == pygame.KEYDOWN and event.key == pygame.K_f:
                         self.is_fullscreen = not self.is_fullscreen
                         if self.is_fullscreen:
@@ -224,9 +232,9 @@ class Game:
                             self.max_fps = 60
 
                     # handle starting game
-                    is_space_pressed = event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE
-                    is_mouse_clicked = event.type == pygame.MOUSEBUTTONDOWN
-                    if not self.reset_high_score_btn.is_clicked() and (is_space_pressed or is_mouse_clicked):
+                    is_space_pressed = event.type == pygame.KEYUP and event.key == pygame.K_SPACE
+                    is_mouse_clicked = event.type == pygame.MOUSEBUTTONUP
+                    if not self.reset_high_score_btn.is_hovered() and (is_space_pressed or is_mouse_clicked):
                         self.game_setup()
 
             # clear screen
@@ -239,6 +247,8 @@ class Game:
 
                 # update player
                 self.player.update(self.screen)
+
+                # print(self.player.isJumpButtonReleased)
 
                 # update obstacles
                 for top_obstacle, bottom_obstacle in zip(self.top_obstacles, self.bottom_obstacles):
