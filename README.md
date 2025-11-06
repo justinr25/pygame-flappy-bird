@@ -2,7 +2,7 @@
 A Python implementation of Flappy Bird using Pygame.
 
 ## Demo
-![Demo of Flappy Bird](assets/pygame-flappy-bird-demo.gif)
+![Demo of Pygame Flappy Bird](assets/pygame-flappy-bird-demo.gif)
 
 ## Usage
 1. Install dependencies: `pip install -r requirements.txt`
